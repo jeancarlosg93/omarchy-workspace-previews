@@ -186,8 +186,15 @@ BarWidget {
             required property var modelData
             readonly property var geometry: modelData ? modelData.lastIpcObject : null
             readonly property var monitor: root.previewMonitor
-            readonly property real scaleX: monitor ? workspaceCanvas.width / monitor.width : 1
-            readonly property real scaleY: monitor ? workspaceCanvas.height / monitor.height : 1
+            // Hyprland reports monitor dimensions in physical pixels, while
+            // client geometry uses logical coordinates. Convert the monitor
+            // dimensions before fitting windows into the preview so it also
+            // works on scaled and mixed-DPI displays.
+            readonly property real monitorScale: monitor && monitor.scale > 0 ? monitor.scale : 1
+            readonly property real logicalMonitorWidth: monitor ? monitor.width / monitorScale : 1
+            readonly property real logicalMonitorHeight: monitor ? monitor.height / monitorScale : 1
+            readonly property real scaleX: monitor ? workspaceCanvas.width / logicalMonitorWidth : 1
+            readonly property real scaleY: monitor ? workspaceCanvas.height / logicalMonitorHeight : 1
             x: geometry && geometry.at && monitor ? Math.max(0, (geometry.at[0] - monitor.x) * scaleX) : 0
             y: geometry && geometry.at && monitor ? Math.max(0, (geometry.at[1] - monitor.y) * scaleY) : 0
             width: geometry && geometry.size ? Math.max(1, geometry.size[0] * scaleX) : workspaceCanvas.width
